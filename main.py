@@ -9,7 +9,6 @@ from replit import db
 from keep_alive import keep_alive
 from discord.ext import commands
 
-server_ids = [1120003050002710550]
 prefix = "r-"
 
 intents = discord.Intents.default()
@@ -25,8 +24,13 @@ starter_encouragements = ["Cheer up", "Hang in there"]
 if "responding" not in db.keys():
   db["responding"] = True
 
-if "set_prefix" not in db.keys():
-  db["set_prefix"] = True
+
+def get_all_guild_id():
+  for i in client.guilds:
+    db["server_ids"] = db["server_ids"].append(i.guild.id)
+
+
+get_all_guild_id()
 
 
 def update_encouragement(encouraging_message):
@@ -148,7 +152,7 @@ async def on_message(message):
       await message.channel.send("Responding is off.")
 
 
-@client.slash_command(guild_ids=server_ids,
+@client.slash_command(guild_ids=db["server_ids"],
                       name="hi",
                       description="greet the bot")
 async def hi(ctx: discord.ApplicationContext):
