@@ -9,30 +9,33 @@ from replit import db
 from keep_alive import keep_alive
 from discord.ext import commands
 
-prefix = "r-"
-
 intents = discord.Intents.default()
 intents.message_content = True
-client = commands.Bot(command_prefix=prefix,
-                      case_insensitive=True,
-                      intents=intents)
+client = commands.Bot(case_insensitive=True, intents=intents)
 
 sad_words = ["sad", "depressed", "angery"]
 
 starter_encouragements = ["Cheer up", "Hang in there"]
 
+db.clear()
+
 if "responding" not in db.keys():
   db["responding"] = True
 
+default_prefix = "r-"
 
 def get_all_guild_id():
+  db["server_ids"] = []
+  db["prefixs"] = [{}]
   for i in client.guilds:
-    db["server_ids"] = db["server_ids"].append(i.guild.id)
+    if i.guild.id not in db["server_ids"]:
+      db["server_ids"] = db["server_ids"].append(i.guild.id)
+    if i.guild.id not in db["prefixs"]:
+      db["prefixs"].update = ({str(i.guild.id): default_prefix})
 
 
 get_all_guild_id()
-
-
+  
 def update_encouragement(encouraging_message):
   if "encouragements" in db.keys():
     encouragements = db["encouragements"]
@@ -71,8 +74,6 @@ def get_weather(city):
 @client.event
 async def on_ready():
   print('logged in as {0.user}'.format(client))
-  #db.clear()
-
 
 @commands.command()
 async def embed(ctx):
@@ -87,6 +88,7 @@ async def embed(ctx):
 
 @client.event
 async def on_message(message):
+  prefix = default_prefix
   if message.author == client.user: return
 
   msg = message.content
@@ -110,9 +112,12 @@ async def on_message(message):
     await message.channel.send(quote)
 
   if msg.startswith(f"{prefix}w"):
-    city = msg.split(f"{prefix}w ", 1)[1]
-    weather = get_weather("" + city)
-    await message.channel.send(weather)
+    try:
+      city = msg.split(f"{prefix}w ", 1)[1]
+      weather = get_weather("" + city)
+      await message.channel.send(weather)
+    except:
+      await message.channel.send("format perintah salah woy !")
 
   if msg.startswith(f"{prefix}new"):
     encouraging_message = msg.split("$new ", 1)[1]
