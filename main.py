@@ -25,6 +25,9 @@ starter_encouragements = ["Cheer up", "Hang in there"]
 if "responding" not in db.keys():
   db["responding"] = True
 
+if "set_prefix" not in db.keys():
+  db["set_prefix"] = True
+
 
 def update_encouragement(encouraging_message):
   if "encouragements" in db.keys():
