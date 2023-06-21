@@ -1,4 +1,3 @@
-#from discord.ext import commands
 import discord
 import os
 import requests
@@ -13,13 +12,11 @@ intents = discord.Intents.default()
 intents.message_content = True
 client = commands.Bot(case_insensitive=True, intents=intents)
 
-sad_words = ["sad", "depressed", "angery"]
-starter_encouragements = ["Cheer up", "Hang in there"]
-
 db.clear()
 
+#init db
+default_prefix = "r-"
 db["server_ids"] = [1120003050002710550]
-
 db['praise'] = [
   "R-unknown-sama ! That's my master ! :heart:",
   "did anyone call my Goshujin-sama ?",
@@ -30,11 +27,6 @@ db['praise'] = [
   "don't call my master's name so casually !! ask my permission first ! :angry:",
   "hey, don't get too close with my master :pensive:",
 ]
-
-if "responding" not in db.keys():
-  db["responding"] = True
-
-default_prefix = "r-"
 """
 for guild in client.guilds:
   if guild.id not in db["server_ids"]:
@@ -43,6 +35,16 @@ for guild in client.guilds:
   if guild.id not in db["prefixes"]:
     db["prefixes"] = db["server_ids"].append([guild.id, default_prefix])
 """
+#end of init db
+
+#init encouragement
+sad_words = ["sad", "depressed", "cry", "kms"]
+starter_encouragements = [
+  "Cheer up", "It's okay dude, I'm here", "u okay bro ?"
+]
+
+if "responding" not in db.keys():
+  db["responding"] = True
 
 
 def update_encouragement(encouraging_message):
@@ -61,6 +63,10 @@ def delete_encouragement(index):
     db["encouragements"] = encouragements
 
 
+#end of init encouragement
+
+
+#init quote
 def get_quote():
   response = requests.get("https://zenquotes.io/api/random")
   json_data = json.loads(response.text)
@@ -68,6 +74,10 @@ def get_quote():
   return (quote)
 
 
+#end of init quote
+
+
+#init weather
 def get_weather(city):
   response = requests.get(
     "https://api.openweathermap.org/data/2.5/weather?q=" + city +
@@ -80,11 +90,15 @@ def get_weather(city):
   return (pesan)
 
 
+#end of init weather
+
+
 @client.event
 async def on_ready():
   print('logged in as {0.user}'.format(client))
 
 
+#slash commands
 @client.slash_command(guild_ids=db["server_ids"],
                       name="hi",
                       description="greet the bot")
@@ -92,6 +106,8 @@ async def hi(ctx: discord.ApplicationContext):
   await ctx.respond("Henlo !")
 
 
+#end of slash commands
+"""
 @commands.command()
 async def embed(ctx):
   embed = discord.Embed(
@@ -101,6 +117,7 @@ async def embed(ctx):
     "This is an embed that will show how to build an embed and the different components",
     color=discord.Color.blue())
   await ctx.send(embed=embed)
+"""
 
 
 @client.event
@@ -110,35 +127,42 @@ async def on_message(message):
 
   msg = message.content
 
+  #greet methods
   if msg.startswith(f"{prefix}henlo"):
     await message.channel.send('Hai! goshujin-sama!')
+  #end of greet methods
 
+  #praise methods
   if (msg.rfind("R-unknown") != -1 or msg.rfind("r-unknown") != -1
       or msg.rfind("runknown") != -1):
     await message.channel.send(db["praise"][random.randint(
       0, (len(db["praise"]) - 1))])
+  #end of praise methods
 
-  if msg.startswith(f"{prefix}dm"):
-    dm = msg.split("$dm ", 1)[1]
-    user = client.get_user(268063580170092544)
-    await user.send(dm)
-
-  #if msg.startswith(f"{prefix}help"):
-
-  if msg.startswith(f"{prefix}quote"):
+  #quote methods
+  if (msg.startswith(f"{prefix}q") or msg.startswith(f"{prefix}quote")):
     quote = get_quote()
     await message.channel.send(quote)
+  #end of quote methods
 
-  if msg.startswith(f"{prefix}w"):
+  #weather methods
+  if (msg.startswith(f"{prefix}w") or msg.startswith(f"{prefix}weather")):
     try:
       city = msg.split(f"{prefix}w ", 1)[1]
       weather = get_weather("" + city)
       await message.channel.send(weather)
     except:
-      await message.channel.send("format perintah salah woy !")
+      try:
+        city = msg.split(f"{prefix}weather ", 1)[1]
+        weather = get_weather("" + city)
+        await message.channel.send(weather)
+      except:
+        await message.channel.send("format perintah salah woy !")
+  #end of weather methods
 
+  #encouragement methods
   if msg.startswith(f"{prefix}new"):
-    encouraging_message = msg.split("$new ", 1)[1]
+    encouraging_message = msg.split(f"{prefix}new ", 1)[1]
     update_encouragement(encouraging_message)
     await message.channel.send("Added!")
 
@@ -173,6 +197,19 @@ async def on_message(message):
     else:
       db["responding"] = False
       await message.channel.send("Responding is off.")
+  #end of encouragement methods
+  """
+  #dm methods
+  if msg.startswith(f"{prefix}dm"):
+    dm = msg.split(f"{prefix}dm ", 1)[1]
+    user = client.get_user(268063580170092544)
+    await user.send(dm)
+  #end of dm methods
+
+  #help methods
+  if msg.startswith(f"{prefix}help"):
+  #end of help methods
+  """
 
 
 keep_alive()
