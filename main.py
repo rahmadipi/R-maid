@@ -10,7 +10,7 @@ from discord.ext import commands
 
 intents = discord.Intents.default()
 intents.message_content = True
-client = commands.Bot(case_insensitive=True, intents=intents)
+bot = commands.Bot(case_insensitive=True, intents=intents)
 
 db.clear()
 
@@ -28,7 +28,7 @@ db['praise'] = [
   "hey, don't get too close with my master :pensive:",
 ]
 """
-for guild in client.guilds:
+for guild in bot.guilds:
   if guild.id not in db["server_ids"]:
     db["server_ids"] = db["server_ids"].append(guild.id)
     print(guild.id)
@@ -93,13 +93,13 @@ def get_weather(city):
 #end of init weather
 
 
-@client.event
+@bot.event
 async def on_ready():
-  print('logged in as {0.user}'.format(client))
+  print('logged in as {0.user}'.format(bot))
 
 
 #slash commands
-@client.slash_command(guild_ids=db["server_ids"],
+@bot.slash_command(guild_ids=db["server_ids"],
                       name="hi",
                       description="greet the bot")
 async def hi(ctx: discord.ApplicationContext):
@@ -120,10 +120,10 @@ async def embed(ctx):
 """
 
 
-@client.event
+@bot.event
 async def on_message(message):
   prefix = default_prefix
-  if message.author == client.user: return
+  if message.author == bot.user: return
 
   msg = message.content
 
@@ -202,7 +202,7 @@ async def on_message(message):
   #dm methods
   if msg.startswith(f"{prefix}dm"):
     dm = msg.split(f"{prefix}dm ", 1)[1]
-    user = client.get_user(268063580170092544)
+    user = bot.get_user(268063580170092544)
     await user.send(dm)
   #end of dm methods
 
@@ -213,4 +213,4 @@ async def on_message(message):
 
 
 keep_alive()
-client.run(os.getenv('TOKEN'))
+bot.run(os.getenv('TOKEN'))
