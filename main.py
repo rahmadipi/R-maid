@@ -14,28 +14,37 @@ intents.message_content = True
 client = commands.Bot(case_insensitive=True, intents=intents)
 
 sad_words = ["sad", "depressed", "angery"]
-
 starter_encouragements = ["Cheer up", "Hang in there"]
 
 db.clear()
+
+db["server_ids"] = [1120003050002710550]
+
+db['praise'] = [
+  "R-unknown-sama ! That's my master ! :heart:",
+  "did anyone call my Goshujin-sama ?",
+  "hehe R-unknown is my master ! my beloved goshujin-sama :heart: :heart:",
+  "ikr, R-unknown-sama is the best of the best hehe :flushed:",
+  "don't steal my R-unknown-sama or i might bite u, grrrrr.. :rage:",
+  "R-unknown-sama please marry me, kyaaaa >_<",
+  "don't call my master's name so casually !! ask my permission first ! :angry:",
+  "hey, don't get too close with my master :pensive:",
+]
 
 if "responding" not in db.keys():
   db["responding"] = True
 
 default_prefix = "r-"
+"""
+for guild in client.guilds:
+  if guild.id not in db["server_ids"]:
+    db["server_ids"] = db["server_ids"].append(guild.id)
+    print(guild.id)
+  if guild.id not in db["prefixes"]:
+    db["prefixes"] = db["server_ids"].append([guild.id, default_prefix])
+"""
 
-def get_all_guild_id():
-  db["server_ids"] = []
-  db["prefixs"] = [{}]
-  for i in client.guilds:
-    if i.guild.id not in db["server_ids"]:
-      db["server_ids"] = db["server_ids"].append(i.guild.id)
-    if i.guild.id not in db["prefixs"]:
-      db["prefixs"].update = ({str(i.guild.id): default_prefix})
 
-
-get_all_guild_id()
-  
 def update_encouragement(encouraging_message):
   if "encouragements" in db.keys():
     encouragements = db["encouragements"]
@@ -75,6 +84,14 @@ def get_weather(city):
 async def on_ready():
   print('logged in as {0.user}'.format(client))
 
+
+@client.slash_command(guild_ids=db["server_ids"],
+                      name="hi",
+                      description="greet the bot")
+async def hi(ctx: discord.ApplicationContext):
+  await ctx.respond("Henlo !")
+
+
 @commands.command()
 async def embed(ctx):
   embed = discord.Embed(
@@ -98,7 +115,8 @@ async def on_message(message):
 
   if (msg.rfind("R-unknown") != -1 or msg.rfind("r-unknown") != -1
       or msg.rfind("runknown") != -1):
-    await message.channel.send("R-unknown-sama ! That's my master ! :heart:")
+    await message.channel.send(db["praise"][random.randint(
+      0, (len(db["praise"]) - 1))])
 
   if msg.startswith(f"{prefix}dm"):
     dm = msg.split("$dm ", 1)[1]
@@ -155,13 +173,6 @@ async def on_message(message):
     else:
       db["responding"] = False
       await message.channel.send("Responding is off.")
-
-
-@client.slash_command(guild_ids=db["server_ids"],
-                      name="hi",
-                      description="greet the bot")
-async def hi(ctx: discord.ApplicationContext):
-  await ctx.respond("Henlo !")
 
 
 keep_alive()
