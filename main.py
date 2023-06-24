@@ -8,15 +8,54 @@ from replit import db
 from keep_alive import keep_alive
 from discord.ext import commands
 
+default_prefix = "r-"
+db["server_ids"] = [1120003050002710550]
+guild_ids = db["server_ids"]
 intents = discord.Intents.default()
 intents.message_content = True
-bot = commands.Bot(case_insensitive=True, intents=intents)
+bot = commands.Bot(case_insensitive=True,
+                   command_prefix=default_prefix,
+                   intents=intents)
 
 db.clear()
 
+
+@bot.event
+async def on_ready():
+  print('logged in as {0.user}'.format(bot))
+
+
+#init help
+def helpEmbed():
+  embed = discord.Embed(
+    title="House Navigation",
+    #url="https://realdrewdata.medium.com/",
+    description="Rules to request my services",
+    color=discord.Color.dark_red())
+
+  embed.add_field(
+    name="Command rules",
+    value="Command me by send `r-`+`{commands}`+`[variables]`\n" +
+    "`variables` are optional\n" +
+    "for `commands` you can pick from command list below",
+    inline=False)
+
+  embed.add_field(name="Command", value="", inline=True)
+  embed.add_field(name="Service", value="", inline=True)
+  #list below
+  embed.add_field(name="", value="`help` (`h`)", inline=False)
+  embed.add_field(name="", value="get to know me better", inline=False)
+  embed.add_field(name="",
+                  value="`temperature` (`t`) `+` `{city name}`",
+                  inline=False)
+  embed.add_field(name="", value="get the ", inline=True)
+
+  return embed
+
+
+#end of init help
+
 #init db
-default_prefix = "r-"
-db["server_ids"] = [1120003050002710550]
 db['praise'] = [
   "R-unknown-sama ! That's my master ! :heart:",
   "did anyone call my Goshujin-sama ?",
@@ -27,14 +66,13 @@ db['praise'] = [
   "don't call my master's name so casually !! ask my permission first ! :angry:",
   "hey, don't get too close with my master :pensive:",
 ]
-"""
-for guild in bot.guilds:
-  if guild.id not in db["server_ids"]:
-    db["server_ids"] = db["server_ids"].append(guild.id)
-    print(guild.id)
-  if guild.id not in db["prefixes"]:
-    db["prefixes"] = db["server_ids"].append([guild.id, default_prefix])
-"""
+
+# for guild in bot.guilds:
+#   if guild.id not in guild_ids:
+#     guild_ids = guild_ids.append(guild.id)
+#     print(guild.id)
+#   if guild.id not in db["prefixes"]:
+#     db["prefixes"] = guild_ids.append([guild.id, default_prefix])
 #end of init db
 
 #init encouragement
@@ -77,8 +115,8 @@ def get_quote():
 #end of init quote
 
 
-#init weather
-def get_weather(city):
+#init temperature
+def get_temperature(city):
   response = requests.get(
     "https://api.openweathermap.org/data/2.5/weather?q=" + city +
     "&units=metric&appid=" + os.getenv('WEATHER_KEY') + "")
@@ -90,42 +128,51 @@ def get_weather(city):
   return (pesan)
 
 
-#end of init weather
-
-
-@bot.event
-async def on_ready():
-  print('logged in as {0.user}'.format(bot))
+#end of init temperature
 
 
 #slash commands
-@bot.slash_command(guild_ids=db["server_ids"],
-                      name="hi",
-                      description="greet the bot")
+@bot.slash_command(guild_ids=guild_ids, name="hi", description="greet the bot")
 async def hi(ctx: discord.ApplicationContext):
   await ctx.respond("Henlo !")
 
 
+@bot.slash_command(guild_ids=guild_ids,
+                   name="help",
+                   description="ask R-maid how to command her")
+async def help(ctx: discord.ApplicationContext):
+  embed = helpEmbed()
+  await ctx.respond(embed=embed)
+
+
 #end of slash commands
-"""
-@commands.command()
-async def embed(ctx):
-  embed = discord.Embed(
-    title="Sample Embed",
-    url="https://realdrewdata.medium.com/",
-    description=
-    "This is an embed that will show how to build an embed and the different components",
-    color=discord.Color.blue())
-  await ctx.send(embed=embed)
-"""
 
 
+# @commands.command()
+# async def embed(interaction):
+#   embed = discord.Embed(
+#     title="Sample Embed",
+#     url="https://realdrewdata.medium.com/",
+#     description=
+#     "This is an embed that will show how to build an embed and the different components",
+#     color=discord.Color.blue())
+#   await interaction.send(embed=embed)
 @bot.event
 async def on_message(message):
   prefix = default_prefix
   if message.author == bot.user: return
 
-  msg = message.content
+  msg = message.content.lower()
+
+  #help methods
+  if (msg.startswith(f"{prefix}h") or msg.startswith(f"{prefix}help")):
+    embed = helpEmbed()
+    await message.channel.send(embed=embed)
+  #end of help methods
+
+  #avatar methods
+  # coming soon
+  #end of avatar methods
 
   #greet methods
   if msg.startswith(f"{prefix}henlo"):
@@ -135,8 +182,7 @@ async def on_message(message):
   #praise methods
   if (msg.rfind("R-unknown") != -1 or msg.rfind("r-unknown") != -1
       or msg.rfind("runknown") != -1):
-    await message.channel.send(db["praise"][random.randint(
-      0, (len(db["praise"]) - 1))])
+    await message.channel.send(random.choice(db["praise"]))
   #end of praise methods
 
   #quote methods
@@ -145,20 +191,20 @@ async def on_message(message):
     await message.channel.send(quote)
   #end of quote methods
 
-  #weather methods
-  if (msg.startswith(f"{prefix}w") or msg.startswith(f"{prefix}weather")):
+  #temperature methods
+  if (msg.startswith(f"{prefix}t") or msg.startswith(f"{prefix}temperature")):
     try:
-      city = msg.split(f"{prefix}w ", 1)[1]
-      weather = get_weather("" + city)
-      await message.channel.send(weather)
+      city = msg.split(f"{prefix}t ", 1)[1]
+      temperature = get_temperature("" + city)
+      await message.channel.send(temperature)
     except:
       try:
-        city = msg.split(f"{prefix}weather ", 1)[1]
-        weather = get_weather("" + city)
-        await message.channel.send(weather)
+        city = msg.split(f"{prefix}temperature ", 1)[1]
+        temperature = get_temperature("" + city)
+        await message.channel.send(temperature)
       except:
         await message.channel.send("format perintah salah woy !")
-  #end of weather methods
+  #end of temperature methods
 
   #encouragement methods
   if msg.startswith(f"{prefix}new"):
@@ -198,19 +244,21 @@ async def on_message(message):
       db["responding"] = False
       await message.channel.send("Responding is off.")
   #end of encouragement methods
-  """
-  #dm methods
-  if msg.startswith(f"{prefix}dm"):
-    dm = msg.split(f"{prefix}dm ", 1)[1]
-    user = bot.get_user(268063580170092544)
-    await user.send(dm)
-  #end of dm methods
 
-  #help methods
-  if msg.startswith(f"{prefix}help"):
-  #end of help methods
-  """
+  #dm methods
+  # if msg.startswith(f"{prefix}dm"):
+  #   dm = msg.split(f"{prefix}dm ", 1)[1]
+  #   user = bot.get_user(268063580170092544)
+  #   await user.send(dm)
+  #end of dm methods
 
 
 keep_alive()
-bot.run(os.getenv('TOKEN'))
+try:
+  bot.run(os.getenv('TOKEN'))
+except discord.HTTPException as e:
+  if e.status == 429:
+    print(
+      "The Discord servers denied the connection for making too many requests")
+  else:
+    raise e
