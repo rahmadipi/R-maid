@@ -55,6 +55,21 @@ def helpEmbed():
 
 #end of init help
 
+
+#init avatar
+def avatarEmbed(user):
+  embed = discord.Embed(title=user.name,
+                        url=user.avatar,
+                        description=f"{user.name}'s avatar",
+                        color=discord.Color.dark_red())
+
+  embed.set_image(url=user.avatar)
+
+  return embed
+
+
+#end of init avatar
+
 #init db
 db['praise'] = [
   "R-unknown-sama ! That's my master ! :heart:",
@@ -132,18 +147,29 @@ def get_temperature(city):
 
 
 #slash commands
-@bot.slash_command(guild_ids=guild_ids, name="hi", description="greet the bot")
-async def hi(ctx: discord.ApplicationContext):
-  await ctx.respond("Henlo !")
+@bot.slash_command(description="Greet your lovely maid.")
+async def hi(ctx, name: str = None):
+  name = name or ctx.author.name
+  await ctx.respond(f"Henlo {name}!")
 
 
-@bot.slash_command(guild_ids=guild_ids,
-                   name="help",
-                   description="ask R-maid how to command her")
-async def help(ctx: discord.ApplicationContext):
+@bot.slash_command(description="Ask your maid how to command her.")
+async def help(ctx):
   embed = helpEmbed()
   await ctx.respond(embed=embed)
 
+
+@bot.slash_command(description="3.. 2.. 1.. Cheeze !")
+async def avatar(ctx):
+  user = ctx.author
+  embed = avatarEmbed(user)
+  await ctx.respond(embed=embed)
+
+
+# async def avatar(ctx, user=discord.Member):
+#   user = ctx.get_user(user.id) or ctx.author
+#   embed = avatarEmbed(user)
+#   await ctx.respond(embed=embed)
 
 #end of slash commands
 
@@ -157,6 +183,11 @@ async def help(ctx: discord.ApplicationContext):
 #     "This is an embed that will show how to build an embed and the different components",
 #     color=discord.Color.blue())
 #   await interaction.send(embed=embed)
+@bot.command()
+async def ping(ctx: discord.ApplicationContext):
+  await ctx.send("pong")
+
+
 @bot.event
 async def on_message(message):
   prefix = default_prefix
