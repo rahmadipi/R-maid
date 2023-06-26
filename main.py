@@ -160,32 +160,18 @@ async def help(ctx):
 
 
 @bot.slash_command(description="3.. 2.. 1.. Cheeze !")
-async def avatar(ctx):
-  user = ctx.author
+async def avatar(ctx, user:discord.Member=None):
+  user = user or ctx.author
   embed = avatarEmbed(user)
   await ctx.respond(embed=embed)
 
 
-# async def avatar(ctx, user=discord.Member):
-#   user = ctx.get_user(user.id) or ctx.author
+# async def avatar(ctx):
+#   user = ctx.author
 #   embed = avatarEmbed(user)
 #   await ctx.respond(embed=embed)
 
 #end of slash commands
-
-
-# @commands.command()
-# async def embed(interaction):
-#   embed = discord.Embed(
-#     title="Sample Embed",
-#     url="https://realdrewdata.medium.com/",
-#     description=
-#     "This is an embed that will show how to build an embed and the different components",
-#     color=discord.Color.blue())
-#   await interaction.send(embed=embed)
-@bot.command()
-async def ping(ctx: discord.ApplicationContext):
-  await ctx.send("pong")
 
 
 @bot.event
