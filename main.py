@@ -8,13 +8,11 @@ from replit import db
 from keep_alive import keep_alive
 from discord.ext import commands
 
-default_prefix = "r-"
-db["server_ids"] = [1120003050002710550]
-guild_ids = db["server_ids"]
+prefix = "r-"
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(case_insensitive=True,
-                   command_prefix=default_prefix,
+                   command_prefix=prefix,
                    intents=intents)
 
 db.clear()
@@ -22,6 +20,14 @@ db.clear()
 
 @bot.event
 async def on_ready():
+  # activity = discord.Streaming(name="My Stream",
+  #                              url="https://youtu.be/sLzEbo8nQ8Q")
+  # activity = discord.Activity(type=discord.ActivityType.listening,
+  #                             name="R-unknown's ASMR")
+  # activity = discord.Activity(type=discord.ActivityType.watching,
+  #                             name="ur mom")
+  activity = discord.Game("with R-unknown")
+  await bot.change_presence(status=discord.Status.dnd, activity=activity)
   print('logged in as {0.user}'.format(bot))
 
 
@@ -33,22 +39,45 @@ def helpEmbed():
     description="Rules to request my services",
     color=discord.Color.dark_red())
 
-  embed.add_field(
-    name="Command rules",
-    value="Command me by send `r-`+`{commands}`+`[variables]`\n" +
-    "`variables` are optional\n" +
-    "for `commands` you can pick from command list below",
-    inline=False)
-
-  embed.add_field(name="Command", value="", inline=True)
-  embed.add_field(name="Service", value="", inline=True)
-  #list below
-  embed.add_field(name="", value="`help` (`h`)", inline=False)
-  embed.add_field(name="", value="get to know me better", inline=False)
-  embed.add_field(name="",
-                  value="`temperature` (`t`) `+` `{city name}`",
+  embed.add_field(name="Command rules",
+                  value="My prefix is `" + prefix + "`,\n" +
+                  "It's case insensitive so `" + prefix + "` and `" +
+                  prefix.upper() + "` would work !\n" +
+                  "btw don't call my master name so casually :rage:",
                   inline=False)
-  embed.add_field(name="", value="get the ", inline=True)
+
+  embed.add_field(name="Command list", value="", inline=False)
+
+  embed.add_field(name="",
+                  value="`" + prefix + "help` (`h`)\n" +
+                  "get to know me better :heart:",
+                  inline=False)
+
+  embed.add_field(name="",
+                  value="`" + prefix + "weather` (`w`) + `{city}`\n" +
+                  "get weather details of the specific city",
+                  inline=False)
+
+  embed.add_field(name="",
+                  value="`" + prefix + "quote` (`q`)\n" +
+                  "get random quote for ur motivation",
+                  inline=False)
+
+  embed.add_field(name="", value="", inline=False)
+  embed.add_field(name="Slash Command list", value="", inline=False)
+
+  embed.add_field(name="",
+                  value="`/help`\n" + "get to know me better :heart:",
+                  inline=False)
+
+  embed.add_field(name="",
+                  value="`/hi` + `[name]`\n" + "greet me :wave:",
+                  inline=False)
+
+  embed.add_field(name="",
+                  value="`/avatar` + `[mention a user]`\n" +
+                  "show the user avatar",
+                  inline=False)
 
   return embed
 
@@ -82,14 +111,6 @@ db['praise'] = [
   "hey, don't get too close with my master :pensive:",
 ]
 
-# for guild in bot.guilds:
-#   if guild.id not in guild_ids:
-#     guild_ids = guild_ids.append(guild.id)
-#     print(guild.id)
-#   if guild.id not in db["prefixes"]:
-#     db["prefixes"] = guild_ids.append([guild.id, default_prefix])
-#end of init db
-
 #init encouragement
 sad_words = ["sad", "depressed", "cry", "kms"]
 starter_encouragements = [
@@ -97,7 +118,7 @@ starter_encouragements = [
 ]
 
 if "responding" not in db.keys():
-  db["responding"] = True
+  db["responding"] = False
 
 
 def update_encouragement(encouraging_message):
@@ -130,8 +151,8 @@ def get_quote():
 #end of init quote
 
 
-#init temperature
-def get_temperature(city):
+#init weather
+def get_weather(city):
   response = requests.get(
     "https://api.openweathermap.org/data/2.5/weather?q=" + city +
     "&units=metric&appid=" + os.getenv('WEATHER_KEY') + "")
@@ -143,7 +164,7 @@ def get_temperature(city):
   return (pesan)
 
 
-#end of init temperature
+#end of init weather
 
 
 #slash commands
@@ -160,7 +181,7 @@ async def help(ctx):
 
 
 @bot.slash_command(description="3.. 2.. 1.. Cheeze !")
-async def avatar(ctx, user:discord.Member=None):
+async def avatar(ctx, user: discord.Member = None):
   user = user or ctx.author
   embed = avatarEmbed(user)
   await ctx.respond(embed=embed)
@@ -176,7 +197,6 @@ async def avatar(ctx, user:discord.Member=None):
 
 @bot.event
 async def on_message(message):
-  prefix = default_prefix
   if message.author == bot.user: return
 
   msg = message.content.lower()
@@ -198,7 +218,7 @@ async def on_message(message):
 
   #praise methods
   if (msg.rfind("R-unknown") != -1 or msg.rfind("r-unknown") != -1
-      or msg.rfind("runknown") != -1):
+      or msg.rfind("runknown") != -1 or msg.rfind("268063580170092544") != -1):
     await message.channel.send(random.choice(db["praise"]))
   #end of praise methods
 
@@ -208,20 +228,20 @@ async def on_message(message):
     await message.channel.send(quote)
   #end of quote methods
 
-  #temperature methods
-  if (msg.startswith(f"{prefix}t") or msg.startswith(f"{prefix}temperature")):
+  #weather methods
+  if (msg.startswith(f"{prefix}w") or msg.startswith(f"{prefix}weather")):
     try:
-      city = msg.split(f"{prefix}t ", 1)[1]
-      temperature = get_temperature("" + city)
+      city = msg.split(f"{prefix}w ", 1)[1]
+      temperature = get_weather("" + city)
       await message.channel.send(temperature)
     except:
       try:
-        city = msg.split(f"{prefix}temperature ", 1)[1]
-        temperature = get_temperature("" + city)
+        city = msg.split(f"{prefix}weather ", 1)[1]
+        temperature = get_weather("" + city)
         await message.channel.send(temperature)
       except:
         await message.channel.send("format perintah salah woy !")
-  #end of temperature methods
+  #end of weather methods
 
   #encouragement methods
   if msg.startswith(f"{prefix}new"):
