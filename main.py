@@ -9,6 +9,7 @@ from keep_alive import keep_alive
 from discord.ext import commands
 
 prefix = "r-"
+color = discord.Color.dark_red()
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(case_insensitive=True,
@@ -33,51 +34,36 @@ async def on_ready():
 
 #init help
 def helpEmbed():
-  embed = discord.Embed(
-    title="House Navigation",
-    #url="https://realdrewdata.medium.com/",
-    description="Rules to request my services",
-    color=discord.Color.dark_red())
+  commandRules = f"\
+  My prefix is `{prefix}`\
+  \nIt's case insensitive so `{prefix}` and `{prefix.upper()}` would work !\
+  \nbtw don't call my master name so casually :rage:\n\n"
 
-  embed.add_field(name="Command rules",
-                  value="My prefix is `" + prefix + "`,\n" +
-                  "It's case insensitive so `" + prefix + "` and `" +
-                  prefix.upper() + "` would work !\n" +
-                  "btw don't call my master name so casually :rage:",
-                  inline=False)
+  commandList = f"\
+  :dizzy: **`{prefix}help` (`h`)**\
+  \nget to know me better :heart:\
+  \n:dizzy: **`{prefix}weather` (`w`) + `{{city}}`**\
+  \nget weather details of the specific city\
+  \n:dizzy: **`{prefix}quote` (`q`)**\
+  \nget random quote for ur motivation\n\n"
 
-  embed.add_field(name="Command list", value="", inline=False)
+  slashCommand = "\
+  :dizzy: **`/help`**\
+  \nget to know me better :heart:\
+  \n:dizzy: **`/hi`**\
+  \ngreet me :wave:\
+  \n:dizzy: **`/avatar` + `[mention a user]`**\
+  \nshow the user avatar\n\n"
 
-  embed.add_field(name="",
-                  value="`" + prefix + "help` (`h`)\n" +
-                  "get to know me better :heart:",
-                  inline=False)
+  embed = discord.Embed(title="House Navigation",
+                        description="Rules to request my services",
+                        color=color)
 
-  embed.add_field(name="",
-                  value="`" + prefix + "weather` (`w`) + `{city}`\n" +
-                  "get weather details of the specific city",
-                  inline=False)
+  embed.add_field(name="Command rules", value=commandRules, inline=False)
 
-  embed.add_field(name="",
-                  value="`" + prefix + "quote` (`q`)\n" +
-                  "get random quote for ur motivation",
-                  inline=False)
+  embed.add_field(name="Command list", value=commandList, inline=False)
 
-  embed.add_field(name="", value="", inline=False)
-  embed.add_field(name="Slash Command list", value="", inline=False)
-
-  embed.add_field(name="",
-                  value="`/help`\n" + "get to know me better :heart:",
-                  inline=False)
-
-  embed.add_field(name="",
-                  value="`/hi` + `[name]`\n" + "greet me :wave:",
-                  inline=False)
-
-  embed.add_field(name="",
-                  value="`/avatar` + `[mention a user]`\n" +
-                  "show the user avatar",
-                  inline=False)
+  embed.add_field(name="Slash Command list", value=slashCommand, inline=False)
 
   return embed
 
@@ -90,7 +76,7 @@ def avatarEmbed(user):
   embed = discord.Embed(title=user.name,
                         url=user.avatar,
                         description=f"{user.name}'s avatar",
-                        color=discord.Color.dark_red())
+                        color=color)
 
   embed.set_image(url=user.avatar)
 
@@ -144,7 +130,10 @@ def delete_encouragement(index):
 def get_quote():
   response = requests.get("https://zenquotes.io/api/random")
   json_data = json.loads(response.text)
-  quote = json_data[0]['q'] + " -" + json_data[0]['a']
+  quote = f"\
+  >>> \"_{json_data[0]['q']}_\"\
+  \n\n-**{json_data[0]['a']}**"
+
   return (quote)
 
 
@@ -152,16 +141,43 @@ def get_quote():
 
 
 #init weather
+def initWeather(data):
+  temperature = f"\
+  **Weather**\
+  \n{data['weather'][0]['description']}\
+  \n**Temperature**\
+  \n{data['main']['temp']} ℃\
+  ({data['main']['temp_min']} ℃ - {data['main']['temp_max']} ℃)\
+  \n**Humidity**\
+  \n{data['main']['humidity']} %\
+  \n**Atmospheric pressure**\
+  \n{data['main']['pressure']} hPa\
+  \n**Wind speed**\
+  \n{data['wind']['speed']} m/s\
+  \n**Cloudiness**\
+  \n{data['clouds']['all']} %\n\n"
+
+  embed = discord.Embed(title=data['name'] + " weather", color=color)
+  embed.add_field(name="", value=temperature, inline=False)
+  embed.set_thumbnail(
+    url=f"https://openweathermap.org/img/wn/{data['weather'][0]['icon']}@2x.png"
+  )
+  return embed
+
+
 def get_weather(city):
+  data = []
   response = requests.get(
     "https://api.openweathermap.org/data/2.5/weather?q=" + city +
     "&units=metric&appid=" + os.getenv('WEATHER_KEY') + "")
   json_data = json.loads(response.text)
   if str(json_data['cod']) != "404":
-    pesan = "Temperature = " + str(json_data['main']['temp']) + "°C"
+    data = json_data
+    res = True
   else:
-    pesan = "Kota tidak ditemukan!"
-  return (pesan)
+    res = False
+  respon = [res, data]
+  return (respon)
 
 
 #end of init weather
@@ -169,8 +185,8 @@ def get_weather(city):
 
 #slash commands
 @bot.slash_command(description="Greet your lovely maid.")
-async def hi(ctx, name: str = None):
-  name = name or ctx.author.name
+async def hi(ctx):
+  name = ctx.author.name
   await ctx.respond(f"Henlo {name}!")
 
 
@@ -230,17 +246,26 @@ async def on_message(message):
 
   #weather methods
   if (msg.startswith(f"{prefix}w") or msg.startswith(f"{prefix}weather")):
+    weatherFail = "u sure that city exist ?"
     try:
       city = msg.split(f"{prefix}w ", 1)[1]
-      temperature = get_weather("" + city)
-      await message.channel.send(temperature)
+      respon = get_weather("" + city)
+      if respon[0]:
+        embed = initWeather(respon[1])
+        await message.channel.send(embed=embed)
+      else:
+        await message.channel.send(weatherFail)
     except:
       try:
         city = msg.split(f"{prefix}weather ", 1)[1]
-        temperature = get_weather("" + city)
-        await message.channel.send(temperature)
+        respon = get_weather("" + city)
+        if respon[0]:
+          embed = initWeather(respon[1])
+          await message.channel.send(embed=embed)
+        else:
+          await message.channel.send(weatherFail)
       except:
-        await message.channel.send("format perintah salah woy !")
+        await message.channel.send("fix ur command format please !")
   #end of weather methods
 
   #encouragement methods
