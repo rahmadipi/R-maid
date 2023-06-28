@@ -1,1 +1,1 @@
-# My Discord bot called "R-maid"
+# My Discord bot project
