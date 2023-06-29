@@ -15,6 +15,7 @@ intents.message_content = True
 bot = commands.Bot(case_insensitive=True,
                    command_prefix=prefix,
                    intents=intents)
+wrongFormat = "fix ur command format please !"
 
 db.clear()
 
@@ -45,7 +46,9 @@ def helpEmbed():
   \n:dizzy: **`{prefix}weather` (`w`) + `{{city}}`**\
   \nget weather details of the specific city\
   \n:dizzy: **`{prefix}quote` (`q`)**\
-  \nget random quote for ur motivation\n\n"
+  \nget random quote for ur motivation\
+  \n:dizzy: **`{prefix}gif` (`g`) + `{{keywords}}`**\
+  \nlemme find the gif using your keywords\n\n"
 
   slashCommand = "\
   :dizzy: **`/help`**\
@@ -144,7 +147,7 @@ def get_quote():
 def initWeather(data):
   temperature = f"\
   **Weather**\
-  \n{data['weather'][0]['description']}\
+  \n{data['weather'][0]['description'].capitalize()}\
   \n**Temperature**\
   \n{data['main']['temp']} ℃\
   ({data['main']['temp_min']} ℃ - {data['main']['temp_max']} ℃)\
@@ -181,6 +184,31 @@ def get_weather(city):
 
 
 #end of init weather
+
+
+#init gif
+def gifEmbed(search):
+  embed = None
+  dataSize = 25
+  response = requests.get(
+    "https://api.giphy.com/v1/gifs/search?api_key=" + os.getenv('GIPHY_KEY') +
+    "&q=" + search + "&limit=" + str(dataSize) +
+    "&offset=0&rating=g&lang=en&bundle=messaging_non_clips")
+  json_data = json.loads(response.text)
+  if str(json_data['meta']['status']) == "200":
+    rand = random.randint(0, (dataSize - 1))
+    url = json_data['data'][rand]['url']
+    gif = json_data['data'][rand]['images']['fixed_height']['url']
+    embed = discord.Embed(title="", url=url, description="", color=color)
+    embed.set_image(url=gif)
+    res = True
+  else:
+    res = False
+  respon = [res, embed]
+  return respon
+
+
+#end of init gif
 
 
 #slash commands
@@ -244,6 +272,30 @@ async def on_message(message):
     await message.channel.send(quote)
   #end of quote methods
 
+  #gif methods
+  if (msg.startswith(f"{prefix}g") or msg.startswith(f"{prefix}gif")):
+    gifFail = "umm something went wrong"
+    try:
+      search = msg.split(f"{prefix}g ", 1)[1]
+      respon = gifEmbed("" + search)
+      if respon[0]:
+        embed = respon[1]
+        await message.channel.send(embed=embed)
+      else:
+        await message.channel.send(gifFail)
+    except:
+      try:
+        search = msg.split(f"{prefix}gif ", 1)[1]
+        respon = gifEmbed("" + search)
+        if respon[0]:
+          embed = respon[1]
+          await message.channel.send(embed=embed)
+        else:
+          await message.channel.send(gifFail)
+      except:
+        await message.channel.send(wrongFormat)
+  #end of gif methods
+
   #weather methods
   if (msg.startswith(f"{prefix}w") or msg.startswith(f"{prefix}weather")):
     weatherFail = "u sure that city exist ?"
@@ -265,7 +317,7 @@ async def on_message(message):
         else:
           await message.channel.send(weatherFail)
       except:
-        await message.channel.send("fix ur command format please !")
+        await message.channel.send(wrongFormat)
   #end of weather methods
 
   #encouragement methods
