@@ -89,7 +89,10 @@ def avatarEmbed(user):
 
 #end of init avatar
 
-#init db
+#init clingy
+if "clingy" not in db.keys():
+  db["clingy"] = True
+
 db['praise'] = [
   "R-unknown-sama ! That's my master ! :heart:",
   "did anyone call my Goshujin-sama ?",
@@ -100,6 +103,7 @@ db['praise'] = [
   "don't call my master's name so casually !! ask my permission first ! :angry:",
   "hey, don't get too close with my master :pensive:",
 ]
+#end of init clingy
 
 #init encouragement
 sad_words = ["sad", "depressed", "cry", "kms"]
@@ -279,11 +283,35 @@ async def on_message(message):
     await message.channel.send('Hai! goshujin-sama!')
   #end of greet methods
 
-  #praise methods
-  if (msg.rfind("R-unknown") != -1 or msg.rfind("r-unknown") != -1
-      or msg.rfind("runknown") != -1 or msg.rfind("268063580170092544") != -1):
-    await message.channel.send(random.choice(db["praise"]))
-  #end of praise methods
+  #cling methods
+  if msg.startswith(f"{prefix}clingy"):
+    clingyOff = "aight, i will keep my dignity as your maid :pensive:"
+    clingyOn = "YES MASTER, i will always on ur side :heart:"
+    clingyFail = "what do you want ?"
+    try:
+      value = msg.split(f"{prefix}clingy ", 1)[1]
+      if value.lower() == "on":
+        db["clingy"] = True
+        await message.channel.send(clingyOn)
+      elif value.lower() == "off":
+        db["clingy"] = False
+        await message.channel.send(clingyOff)
+      else:
+        await message.channel.send(clingyFail)
+    except:
+      if db["clingy"]:
+        db["clingy"] = False
+        await message.channel.send(clingyOff)
+      else:
+        db["clingy"] = True
+        await message.channel.send(clingyOn)
+
+  if db["clingy"]:
+    if (msg.rfind("R-unknown") != -1 or msg.rfind("r-unknown") != -1
+        or msg.rfind("runknown") != -1
+        or msg.rfind("268063580170092544") != -1):
+      await message.channel.send(random.choice(db["praise"]))
+  #end of clingy methods
 
   #quote methods
   if (msg.startswith(f"{prefix}q") or msg.startswith(f"{prefix}quote")):
