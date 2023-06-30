@@ -13,6 +13,7 @@ color = discord.Color.dark_red()
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
+intents.reactions = True
 bot = commands.Bot(case_insensitive=True,
                    command_prefix=prefix,
                    intents=intents)
@@ -260,6 +261,40 @@ async def on_member_join(member):
       await member.add_roles(role)
     except:
       pass
+
+
+#self assign role method
+@bot.event
+async def on_raw_reaction_add(payload=None):
+  msgID: int = 1124239288410832918
+  guildId: int = 1120003050002710550
+  roleRed: int = 1124242493114945616
+  roleBlue: int = 1124263502715039846
+  roleGreen: int = 1124263828813791232
+  guild = discord.utils.get(bot.guilds, id=guildId)
+  if payload is not None:
+    if payload.message_id == msgID:
+      # channel = discord.utils.get(guild.channels, id=payload.channel_id)
+      # await channel.send("abc" + payload.emoji.name)
+      member = discord.utils.get(guild.members, id=payload.user_id)
+      roleG = discord.utils.get(guild.roles, id=roleGreen)
+      roleB = discord.utils.get(guild.roles, id=roleBlue)
+      roleR = discord.utils.get(guild.roles, id=roleRed)
+      if str(payload.emoji.name) == '😏':
+        await member.add_roles(roleG)
+        await member.remove_roles(roleR)
+        await member.remove_roles(roleB)
+      elif str(payload.emoji.name) == '😌':
+        await member.add_roles(roleB)
+        await member.remove_roles(roleR)
+        await member.remove_roles(roleG)
+      elif str(payload.emoji.name) == '😔':
+        await member.add_roles(roleR)
+        await member.remove_roles(roleG)
+        await member.remove_roles(roleB)
+
+
+#end of self assign role method
 
 
 @bot.event
