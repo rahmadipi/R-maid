@@ -12,6 +12,7 @@ prefix = "r-"
 color = discord.Color.dark_red()
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 bot = commands.Bot(case_insensitive=True,
                    command_prefix=prefix,
                    intents=intents)
@@ -189,7 +190,7 @@ def get_weather(city):
 #init gif
 def gifEmbed(search):
   embed = None
-  dataSize = 25
+  dataSize = 10
   response = requests.get(
     "https://api.giphy.com/v1/gifs/search?api_key=" + os.getenv('GIPHY_KEY') +
     "&q=" + search + "&limit=" + str(dataSize) +
@@ -237,6 +238,24 @@ async def avatar(ctx, user: discord.Member = None):
 #   await ctx.respond(embed=embed)
 
 #end of slash commands
+
+
+@bot.event
+async def on_member_join(member):
+  # R-maid HQ server
+  guildId: int = 1120003050002710550
+  roleId: int = 1124148992272498698
+  # R-lab server
+  # guildId: int = 898743465465225256
+  # roleId: int = 1124164614763053197
+  # roleName = "tester"
+  if member.guild.id == guildId:
+    try:
+      #role = discord.utils.get(member.guild.roles, name=roleName)
+      role = discord.utils.get(member.guild.roles, id=roleId)
+      await member.add_roles(role)
+    except:
+      pass
 
 
 @bot.event
