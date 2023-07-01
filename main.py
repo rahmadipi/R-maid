@@ -3,12 +3,20 @@ import os
 import requests
 import json
 import random
-#import replit
+from os import system
 from replit import db
 from keep_alive import keep_alive
 from discord.ext import commands
 
 prefix = "r-"
+# for R-maid HQ server
+msgID: int = 1124239288410832918
+guildId: int = 1120003050002710550
+roleRed: int = 1124242493114945616
+roleBlue: int = 1124263502715039846
+roleGreen: int = 1124263828813791232
+rolePurple: int = 1124326067667226664
+# end of R-maid HQ server
 color = discord.Color.dark_red()
 intents = discord.Intents.default()
 intents.message_content = True
@@ -266,32 +274,75 @@ async def on_member_join(member):
 #self assign role method
 @bot.event
 async def on_raw_reaction_add(payload=None):
-  msgID: int = 1124239288410832918
-  guildId: int = 1120003050002710550
-  roleRed: int = 1124242493114945616
-  roleBlue: int = 1124263502715039846
-  roleGreen: int = 1124263828813791232
-  guild = discord.utils.get(bot.guilds, id=guildId)
   if payload is not None:
-    if payload.message_id == msgID:
-      # channel = discord.utils.get(guild.channels, id=payload.channel_id)
-      # await channel.send("abc" + payload.emoji.name)
-      member = discord.utils.get(guild.members, id=payload.user_id)
+    guild = discord.utils.get(bot.guilds, id=guildId)
+    if payload.guild_id == guildId:
       roleG = discord.utils.get(guild.roles, id=roleGreen)
       roleB = discord.utils.get(guild.roles, id=roleBlue)
       roleR = discord.utils.get(guild.roles, id=roleRed)
-      if str(payload.emoji.name) == '😏':
-        await member.add_roles(roleG)
-        await member.remove_roles(roleR)
-        await member.remove_roles(roleB)
-      elif str(payload.emoji.name) == '😌':
-        await member.add_roles(roleB)
-        await member.remove_roles(roleR)
-        await member.remove_roles(roleG)
-      elif str(payload.emoji.name) == '😔':
-        await member.add_roles(roleR)
-        await member.remove_roles(roleG)
-        await member.remove_roles(roleB)
+      roleP = discord.utils.get(guild.roles, id=rolePurple)
+      emojiSmirk = '😏'
+      emojiPensive = '😔'
+      emojiRelieved = '😌'
+      emojiAngry = '😠'
+      if payload.message_id == msgID:
+        # add reaction to the message
+        # channel = bot.get_channel(payload.channel_id)
+        # message = await channel.fetch_message(msgID)
+        # await message.add_reaction(emojiSmirk)
+        # await message.add_reaction(emojiPensive)
+        # await message.add_reaction(emojiRelieved)
+        # await message.add_reaction(emojiAngry)
+        member = discord.utils.get(guild.members, id=payload.user_id)
+        # await member.remove_roles(roleG)
+        # await member.remove_roles(roleB)
+        # await member.remove_roles(roleR)
+        # await member.remove_roles(roleP)
+        if str(payload.emoji.name) == emojiSmirk:
+          await member.add_roles(roleG)
+          # await message.remove_reaction(emojiPensive, member)
+          # await message.remove_reaction(emojiRelieved, member)
+          # await message.remove_reaction(emojiAngry, member)
+        elif str(payload.emoji.name) == emojiRelieved:
+          await member.add_roles(roleB)
+          # await message.remove_reaction(emojiPensive, member)
+          # await message.remove_reaction(emojiSmirk, member)
+          # await message.remove_reaction(emojiAngry, member)
+        elif str(payload.emoji.name) == emojiPensive:
+          await member.add_roles(roleR)
+          # await message.remove_reaction(emojiRelieved, member)
+          # await message.remove_reaction(emojiSmirk, member)
+          # await message.remove_reaction(emojiAngry, member)
+        elif str(payload.emoji.name) == emojiAngry:
+          await member.add_roles(roleP)
+          # await message.remove_reaction(emojiRelieved, member)
+          # await message.remove_reaction(emojiSmirk, member)
+          # await message.remove_reaction(emojiPensive, member)
+
+
+@bot.event
+async def on_raw_reaction_remove(payload=None):
+  if payload is not None:
+    guild = discord.utils.get(bot.guilds, id=guildId)
+    if payload.guild_id == guildId:
+      roleG = discord.utils.get(guild.roles, id=roleGreen)
+      roleB = discord.utils.get(guild.roles, id=roleBlue)
+      roleR = discord.utils.get(guild.roles, id=roleRed)
+      roleP = discord.utils.get(guild.roles, id=rolePurple)
+      emojiSmirk = '😏'
+      emojiPensive = '😔'
+      emojiRelieved = '😌'
+      emojiAngry = '😠'
+      if payload.message_id == msgID:
+        member = discord.utils.get(guild.members, id=payload.user_id)
+        if str(payload.emoji.name) == emojiSmirk:
+          await member.remove_roles(roleG)
+        elif str(payload.emoji.name) == emojiRelieved:
+          await member.remove_roles(roleB)
+        elif str(payload.emoji.name) == emojiPensive:
+          await member.remove_roles(roleR)
+        elif str(payload.emoji.name) == emojiAngry:
+          await member.remove_roles(roleP)
 
 
 #end of self assign role method
@@ -307,16 +358,8 @@ async def on_message(message):
   if (msg.startswith(f"{prefix}h") or msg.startswith(f"{prefix}help")):
     embed = helpEmbed()
     await message.channel.send(embed=embed)
+    return
   #end of help methods
-
-  #avatar methods
-  # coming soon
-  #end of avatar methods
-
-  #greet methods
-  if msg.startswith(f"{prefix}henlo"):
-    await message.channel.send('Hai! goshujin-sama!')
-  #end of greet methods
 
   #cling methods
   if msg.startswith(f"{prefix}clingy"):
@@ -340,18 +383,21 @@ async def on_message(message):
       else:
         db["clingy"] = True
         await message.channel.send(clingyOn)
+    return
 
   if db["clingy"]:
     if (msg.rfind("R-unknown") != -1 or msg.rfind("r-unknown") != -1
         or msg.rfind("runknown") != -1
         or msg.rfind("268063580170092544") != -1):
       await message.channel.send(random.choice(db["praise"]))
+      return
   #end of clingy methods
 
   #quote methods
   if (msg.startswith(f"{prefix}q") or msg.startswith(f"{prefix}quote")):
     quote = get_quote()
     await message.channel.send(quote)
+    return
   #end of quote methods
 
   #gif methods
@@ -376,6 +422,7 @@ async def on_message(message):
           await message.channel.send(gifFail)
       except:
         await message.channel.send(wrongFormat)
+    return
   #end of gif methods
 
   #weather methods
@@ -400,6 +447,7 @@ async def on_message(message):
           await message.channel.send(weatherFail)
       except:
         await message.channel.send(wrongFormat)
+    return
   #end of weather methods
 
   #encouragement methods
@@ -407,6 +455,7 @@ async def on_message(message):
     encouraging_message = msg.split(f"{prefix}new ", 1)[1]
     update_encouragement(encouraging_message)
     await message.channel.send("Added!")
+    return
 
   if msg.startswith(f"{prefix}del"):
     encouragements = []
@@ -415,20 +464,22 @@ async def on_message(message):
       delete_encouragement(index)
       encouragements = db["encouragements"]
     await message.channel.send(encouragements)
+    return
 
   if msg.startswith(f"{prefix}list"):
     encouragements = []
     if "encouragements" in db.keys():
       encouragements = db["encouragements"]
     await message.channel.send(encouragements)
+    return
 
   if db["responding"]:
     options = starter_encouragements
     if "encouragements" in db.keys():
       options = options + list(db["encouragements"])
-
     if any(word in msg for word in sad_words):
       await message.channel.send(random.choice(options))
+    return
 
   if msg.startswith(f"{prefix}responding"):
     value = msg.split(f"{prefix}responding ", 1)[1]
@@ -439,6 +490,7 @@ async def on_message(message):
     else:
       db["responding"] = False
       await message.channel.send("Responding is off.")
+    return
   #end of encouragement methods
 
   #dm methods
@@ -455,6 +507,11 @@ try:
 except discord.HTTPException as e:
   if e.status == 429:
     print(
-      "The Discord servers denied the connection for making too many requests")
+      "The Discord servers denied the connection for making too many requests\n\nWill restart in few seconds\n"
+    )
+    system("python restarter.py")
+    system('kill 1')
   else:
     raise e
+    system("python restarter.py")
+    system('kill 1')
