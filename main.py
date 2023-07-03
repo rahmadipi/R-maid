@@ -10,12 +10,15 @@ from discord.ext import commands
 
 prefix = "r-"
 # for R-maid HQ server
-msgID: int = 1124239288410832918
 guildId: int = 1120003050002710550
+# waiting reaction message id
+msgID: int = 1124239288410832918
+# color roles
 roleRed: int = 1124242493114945616
 roleBlue: int = 1124263502715039846
 roleGreen: int = 1124263828813791232
 rolePurple: int = 1124326067667226664
+roleId: int = 1124148992272498698  #new member
 # end of R-maid HQ server
 color = discord.Color.dark_red()
 intents = discord.Intents.default()
@@ -27,7 +30,8 @@ bot = commands.Bot(case_insensitive=True,
                    intents=intents)
 wrongFormat = "fix ur command format please !"
 
-db.clear()
+# to reset the db
+# db.clear()
 
 
 @bot.event
@@ -102,16 +106,17 @@ def avatarEmbed(user):
 if "clingy" not in db.keys():
   db["clingy"] = True
 
-db['praise'] = [
-  "R-unknown-sama ! That's my master ! :heart:",
-  "did anyone call my Goshujin-sama ?",
-  "hehe R-unknown is my master ! my beloved goshujin-sama :heart: :heart:",
-  "ikr, R-unknown-sama is the best of the best hehe :flushed:",
-  "don't steal my R-unknown-sama or i might bite u, grrrrr.. :rage:",
-  "R-unknown-sama please marry me, kyaaaa >_<",
-  "don't call my master's name so casually !! ask my permission first ! :angry:",
-  "hey, don't get too close with my master :pensive:",
-]
+if "praise" not in db.keys():
+  db['praise'] = [
+    "R-unknown-sama ! That's my master ! :heart:",
+    "did anyone call my Goshujin-sama ?",
+    "hehe R-unknown is my master ! my beloved goshujin-sama :heart: :heart:",
+    "ikr, R-unknown-sama is the best of the best hehe :flushed:",
+    "don't steal my R-unknown-sama or i might bite u, grrrrr.. :rage:",
+    "R-unknown-sama please marry me, kyaaaa >_<",
+    "don't call my master's name so casually !! ask my permission first ! :angry:",
+    "hey, don't get too close with my master :pensive:",
+  ]
 #end of init clingy
 
 #init encouragement
@@ -255,12 +260,6 @@ async def avatar(ctx, user: discord.Member = None):
 
 @bot.event
 async def on_member_join(member):
-  # R-maid HQ server
-  guildId: int = 1120003050002710550
-  roleId: int = 1124148992272498698
-  # R-lab server
-  # guildId: int = 898743465465225256
-  # roleId: int = 1124164614763053197
   # roleName = "tester"
   if member.guild.id == guildId:
     try:
@@ -275,8 +274,8 @@ async def on_member_join(member):
 @bot.event
 async def on_raw_reaction_add(payload=None):
   if payload is not None:
-    guild = discord.utils.get(bot.guilds, id=guildId)
     if payload.guild_id == guildId:
+      guild = discord.utils.get(bot.guilds, id=guildId)
       roleG = discord.utils.get(guild.roles, id=roleGreen)
       roleB = discord.utils.get(guild.roles, id=roleBlue)
       roleR = discord.utils.get(guild.roles, id=roleRed)
@@ -318,13 +317,14 @@ async def on_raw_reaction_add(payload=None):
           # await message.remove_reaction(emojiRelieved, member)
           # await message.remove_reaction(emojiSmirk, member)
           # await message.remove_reaction(emojiPensive, member)
+        return
 
 
 @bot.event
 async def on_raw_reaction_remove(payload=None):
   if payload is not None:
-    guild = discord.utils.get(bot.guilds, id=guildId)
     if payload.guild_id == guildId:
+      guild = discord.utils.get(bot.guilds, id=guildId)
       roleG = discord.utils.get(guild.roles, id=roleGreen)
       roleB = discord.utils.get(guild.roles, id=roleBlue)
       roleR = discord.utils.get(guild.roles, id=roleRed)
@@ -343,6 +343,7 @@ async def on_raw_reaction_remove(payload=None):
           await member.remove_roles(roleR)
         elif str(payload.emoji.name) == emojiAngry:
           await member.remove_roles(roleP)
+        return
 
 
 #end of self assign role method
@@ -513,5 +514,3 @@ except discord.HTTPException as e:
     system('kill 1')
   else:
     raise e
-    system("python restarter.py")
-    system('kill 1')
